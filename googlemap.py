@@ -8,8 +8,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 
+# Search query
+query = "Los Angeles Roofing Companies"
+
+
 options = Options()
 options.add_argument("--start-maximized")
+options.add_argument("--headless")
 
 # Initialize the Chrome driver with options
 s = Service('chromedriver.exe')
@@ -60,17 +65,19 @@ def extract_company_details(url):
         EC.presence_of_element_located((By.CLASS_NAME, "DUwDvf")))
 
     company_details = {}
-    company_details['name'] = driver.find_element(
+    company_details['organization_name'] = driver.find_element(
         By.CSS_SELECTOR, 'h1.DUwDvf').text
-    print(f"Extracting details for {company_details['name']}")
+    print(f"Extracting details for {company_details['organization_name']}")
 
     try:
         website_element = driver.find_element(
             By.CSS_SELECTOR, 'a.CsEnBe[href^="http"]')
-        company_details['website'] = website_element.get_attribute('href')
-        print(f"Website found: {company_details['website']}")
+        company_details['organization_primary_domain'] = website_element.get_attribute(
+            'href')
+        print(
+            f"Website found: {company_details['organization_primary_domain']}")
     except NoSuchElementException:
-        company_details['website'] = "No website"
+        company_details['organization_primary_domain'] = "No website"
         print("No website found.")
 
     try:
@@ -98,7 +105,7 @@ def extract_company_details(url):
 
 # Search for the companies
 search_box = driver.find_element(By.ID, "searchboxinput")
-search_box.send_keys("Los Angeles Roofing Companies")
+search_box.send_keys(query)
 search_button = driver.find_element(By.ID, "searchbox-searchbutton")
 search_button.click()
 
@@ -112,7 +119,8 @@ company_urls = [result.get_attribute(
 
 # CSV File setup
 csv_file = 'company_data.csv'
-csv_columns = ['name', 'website', 'address', 'phone']
+csv_columns = ['organization_name',
+               'organization_primary_domain', 'address', 'phone']
 with open(csv_file, 'w', newline='', encoding='utf-8') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
     writer.writeheader()
